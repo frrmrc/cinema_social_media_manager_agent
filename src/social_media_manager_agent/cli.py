@@ -8,7 +8,7 @@ from social_media_manager_agent.graph import build_graph
 def main():
     load_dotenv()
 
-    parser = argparse.ArgumentParser(description="Genera post social per il cinema")
+    parser = argparse.ArgumentParser(description="Generate social posts for the cinema")
     parser.add_argument("--mode", choices=["generic_news", "movie_release"], required=True)
     args = parser.parse_args()
 
@@ -16,12 +16,12 @@ def main():
     result = app.invoke({"mode": args.mode})
 
     posts = result["posts"]
-    print(f"Generati {len(posts)} post:")
+    print(f"Generated {len(posts)} posts:")
     for post in posts:
-        print(f"- {post.title} (pubblicazione: {post.publish_at})")
+        print(f"- {post.title} (publish at: {post.publish_at})")
 
     if not posts:
-        print("Nessun post generato: tutti gli argomenti trovati erano già stati trattati di recente.")
+        print("No posts generated: all topics found had already been covered recently.")
 
         return
 

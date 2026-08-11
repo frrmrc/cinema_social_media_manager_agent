@@ -8,7 +8,7 @@ from social_media_manager_agent.schemas import Post
 def sanitize_filename(title: str) -> str:
     safe = re.sub(r"[^\w\s-]", "", title).strip()
     safe = re.sub(r"\s+", "_", safe)
-    return safe or "post_senza_titolo"
+    return safe or "untitled_post"
 
 
 def save_post(post: Post, save_folder: Path | None = None) -> Path:

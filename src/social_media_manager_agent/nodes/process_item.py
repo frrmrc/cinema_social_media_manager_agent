@@ -10,34 +10,34 @@ from social_media_manager_agent.tools.image_gen import generate_image_bytes
 from social_media_manager_agent.tools.storage import save_image, save_post
 
 
-GROUNDING_PROMPT = """Il tuo compito è SOLO raccogliere e riassumere fatti concreti trovati nella ricerca.
-NON scrivere un post, NON usare emoji, NON usare hashtag, NON rivolgerti al pubblico direttamente.
+GROUNDING_PROMPT = """Your task is ONLY to gather and summarize concrete facts found in the search results.
+Do NOT write a post, do NOT use emoji, do NOT use hashtags, do NOT address the audience directly.
 
-Spunto da approfondire: "{title}" — {summary}
+Idea to research: "{title}" — {summary}
 {movie_context}
 
-Risultati di ricerca:
+Search results:
 {search_results}
 
-Scrivi un elenco puntato (massimo 5 punti) dei dettagli più concreti e verificabili trovati nella ricerca
-(date precise, nomi, numeri, citazioni dirette). Questo testo servirà come materiale grezzo per un altro
-processo che scriverà il post vero e proprio — non è il post stesso.
+Write a bullet list (at most 5 points) of the most concrete and verifiable details found in the search
+(precise dates, names, numbers, direct quotes). This text will serve as raw material for another
+process that will write the actual post — it is not the post itself.
 """
 
-WRITE_POST_PROMPT = """Scrivi un post Instagram per un cinema, in italiano, basato sui fatti seguenti.
-Puoi usare emoji e hashtag pertinenti, tono coinvolgente — qui, a differenza del briefing, il post finale è proprio quello che vuoi.
-Basati solo sui fatti forniti, non inventare dettagli.
+WRITE_POST_PROMPT = """Write an Instagram post for a cinema, in English, based on the following facts.
+You can use relevant emoji and hashtags, engaging tone — here, unlike the briefing, the final post is exactly what you want.
+Base it only on the provided facts, do not invent details.
 
-Oggi è {today}.
+Today is {today}.
 
-Spunto: "{title}"
+Idea: "{title}"
 {movie_context}
 
-Fatti raccolti dalla ricerca:
+Facts gathered from the search:
 {briefing}
 
-Scegli uno stile adatto (es. Informativo, Celebrativo, Teaser) e una data/ora di pubblicazione plausibile
-nei prossimi giorni rispetto a oggi (formato YYYY-MM-DDTHH:MM:SS).
+Choose a suitable style (e.g. Informative, Celebratory, Teaser) and a plausible publish date/time
+in the next few days from today (format YYYY-MM-DDTHH:MM:SS).
 """
 
 
@@ -48,7 +48,7 @@ def ground_item(item: SelectedItem) -> str:
     query = f"{item.title} {item.summary}"
     results = focused_search(query, settings.focused_search_results)
 
-    movie_context = f"Film collegato: {item.related_movie_title}" if item.related_movie_title else ""
+    movie_context = f"Related movie: {item.related_movie_title}" if item.related_movie_title else ""
     llm = get_llm("ground_item")
     briefing = llm.invoke(
         GROUNDING_PROMPT.format(
@@ -62,7 +62,7 @@ def ground_item(item: SelectedItem) -> str:
 
 def write_post(item: SelectedItem, briefing: str) -> Post:
     llm = get_llm("write_post")
-    movie_context = f"Film collegato: {item.related_movie_title}" if item.related_movie_title else ""
+    movie_context = f"Related movie: {item.related_movie_title}" if item.related_movie_title else ""
     post = llm.with_structured_output(Post).invoke(
         WRITE_POST_PROMPT.format(
             today=date.today().isoformat(),

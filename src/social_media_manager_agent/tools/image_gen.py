@@ -5,14 +5,14 @@ from openai import OpenAI
 from social_media_manager_agent.config import get_settings
 from social_media_manager_agent.schemas import Post
 
-IMAGE_PROMPT = """Genera un'immagine social per un cinema, seguendo il layout del template di brand identity allegato (font, palette e tono visivo devono restare coerenti). Se lo ritieni necessario puoi servirti delle icone e grafiche presenti.
+IMAGE_PROMPT = """Generate a social media image for a cinema, following the layout of the attached brand identity template (font, palette and visual tone must remain consistent). If you deem it necessary, you may make use of the icons and graphics present.
 
-Includi nell'immagine un testo breve e accattivante (massimo una frase, stile locandina) ispirato a questo post:
-Titolo: {title}
-Stile: {style}
-Contenuto: {body}
+Include in the image a short, eye-catching text (at most one sentence, poster style) inspired by this post:
+Title: {title}
+Style: {style}
+Content: {body}
 
-libertà di inferenza nella creazione dell'immagine: l'immagine può contenere icone, grafiche, disegni, forme ispirate alla brand identity e coerenti con questa.
+Feel free to use inference when creating the image: it may contain icons, graphics, drawings, shapes inspired by and consistent with the brand identity.
 """
 
 def generate_image_bytes(post: Post) -> bytes:

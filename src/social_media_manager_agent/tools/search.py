@@ -10,11 +10,11 @@ def _search(query: str, max_results: int) -> list[dict]:
     return response["results"]
 
 def broad_search(query: str, max_results: int = 8) -> list[dict]:
-    """Ricerca ampia — sostituisce lo `scouter`/`movie_scouter` di ADK."""
+    """Broad search — replaces the ADK `scouter`/`movie_scouter`."""
     return _search(query, max_results)
 
 def focused_search(query: str, max_results: int = 4) -> list[dict]:
-    """Ricerca mirata di approfondimento — sostituisce l'intero sub-agente `grounder_specifico`."""
+    """Focused in-depth search — replaces the entire `grounder_specifico` sub-agent."""
     return _search(query, max_results)
 
 def format_results(results: list[dict]) -> str:

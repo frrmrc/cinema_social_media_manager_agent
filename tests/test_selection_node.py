@@ -22,14 +22,14 @@ class _FakeLLM:
 
 def test_select_items_returns_selected_items_from_state():
     fake_result = SelectedItems(
-        items=[SelectedItem(title="Titolo A", summary="...", reason="Rilevante")]
+        items=[SelectedItem(title="Title A", summary="...", reason="Relevant")]
     )
 
     with patch(
         "social_media_manager_agent.nodes.selection.get_llm",
         return_value=_FakeLLM(fake_result),
     ):
-        state = {"candidate_items": [CandidateItem(title="Titolo A", summary="...")]}
+        state = {"candidate_items": [CandidateItem(title="Title A", summary="...")]}
         result = select_items(state)
 
     assert result == {"selected_items": fake_result.items}

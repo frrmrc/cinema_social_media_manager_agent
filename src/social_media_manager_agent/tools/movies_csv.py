@@ -11,9 +11,9 @@ def load_upcoming_movies(csv_path: Path | None = None) -> list[MovieRelease]:
         reader = csv.DictReader(f)
         return [
             MovieRelease(
-                title=row["titolo"],
-                release_date=row["data_uscita"],
-                screening_date=row["data_proiezione"],
+                title=row["title"],
+                release_date=row["release_date"],
+                screening_date=row["screening_date"],
             )
             for row in reader
         ]

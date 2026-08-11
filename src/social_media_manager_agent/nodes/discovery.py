@@ -8,32 +8,32 @@ from social_media_manager_agent.tools.history import format_history, load_recent
 from social_media_manager_agent.config import get_settings
 
 
-GENERIC_NEWS_QUERY = "notizie e curiosità sul mondo del cinema in Italia questa settimana"
+GENERIC_NEWS_QUERY = "movie news and trivia this week"
 
-EXTRACTION_PROMPT = """Di seguito una serie di risultati di ricerca sul mondo del cinema.
-Estrai fino a 8 spunti di notizia distinti e rilevanti, con titolo sintetico e breve riassunto.
+EXTRACTION_PROMPT = """Below is a series of search results about the movie world.
+Extract up to 8 distinct, relevant news ideas, each with a short title and brief summary.
 
-Risultati di ricerca:
+Search results:
 {search_results}
 """
 
-MOVIE_NEWS_QUERY_TEMPLATE = "notizie, recensioni e curiosità su '{title}' uscita cinema {release_date}"
+MOVIE_NEWS_QUERY_TEMPLATE = "news, reviews and trivia about '{title}' theatrical release {release_date}"
 
-MOVIE_EXTRACTION_PROMPT = """Di seguito una serie di risultati di ricerca sul film "{title}" (uscita: {release_date}).
-Estrai fino a 3 spunti di notizia distinti e rilevanti per un post social, con titolo sintetico e breve riassunto.
+MOVIE_EXTRACTION_PROMPT = """Below is a series of search results about the movie "{title}" (release: {release_date}).
+Extract up to 3 distinct, relevant news ideas for a social post, each with a short title and brief summary.
 
-Risultati di ricerca:
+Search results:
 {search_results}
 """
 
-REFINE_QUERY_PROMPT = """Tutti gli spunti trovati nell'ultima ricerca corrispondono ad argomenti già trattati
-nei post pubblicati di recente (elencati sotto). Suggerisci, in una sola frase, un angolo di ricerca diverso
-per trovare notizie fresche sul mondo del cinema, evitando questi argomenti.
+REFINE_QUERY_PROMPT = """All the ideas found in the last search correspond to topics already covered
+in recently published posts (listed below). Suggest, in a single sentence, a different search angle
+to find fresh movie-world news, avoiding these topics.
 
-Argomenti già trattati di recente:
+Topics already covered recently:
 {history}
 
-Rispondi solo con l'indicazione di ricerca (una frase), nient'altro.
+Reply only with the search direction (one sentence), nothing else.
 """
 
 
@@ -48,7 +48,7 @@ def discover_generic_news(state: GraphState) -> dict:
 
     prompt = EXTRACTION_PROMPT.format(search_results=format_results(results))
     if hint:
-        prompt += f"\n\nEvita spunti relativi a: {hint}"
+        prompt += f"\n\nAvoid ideas related to: {hint}"
 
     llm = get_llm("discover_generic_news")
     extraction = llm.with_structured_output(CandidateItems).invoke(prompt)
@@ -77,7 +77,7 @@ def discover_movie_releases(state: GraphState) -> dict:
             title=movie.title, release_date=movie.release_date, search_results=format_results(results)
         )
         if hint:
-            prompt += f"\n\nEvita spunti relativi a: {hint}"
+            prompt += f"\n\nAvoid ideas related to: {hint}"
 
         extraction = llm.with_structured_output(CandidateItems).invoke(prompt)
         for item in extraction.items:

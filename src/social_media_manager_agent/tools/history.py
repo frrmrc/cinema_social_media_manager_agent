@@ -44,5 +44,5 @@ def append_to_history(items: list[SelectedItem], history_path: Path | None = Non
 
 def format_history(entries: list[HistoryEntry]) -> str:
     if not entries:
-        return "(nessuno)"
+        return "(none)"
     return "\n".join(f"- {e.title}: {e.summary}" for e in entries)

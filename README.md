@@ -1,13 +1,13 @@
 # Cinema Social Media Manager Agent
 
-Sistema multi-agente basato su **LangGraph** che genera automaticamente post Instagram per un cinema:
-cerca notizie/uscite cinematografiche, seleziona gli spunti migliori, scrive la caption, genera l'immagine
-coerente col brand, e salva tutto pronto per la pubblicazione.
+Multi-agent system built with **LangGraph** that automatically generates Instagram posts for a cinema:
+it searches for movie news/releases, selects the best ideas, writes the caption, generates an image
+consistent with the brand, and saves everything ready for publication.
 
-Migrato da un prototipo iniziale su Google ADK + Gemini a **LangGraph + OpenAI**, con generazione immagini
-via **gpt-image-2**.
+Migrated from an initial prototype on Google ADK + Gemini to **LangGraph + OpenAI**, with image
+generation via **gpt-image-2**.
 
-## Architettura
+## Architecture
 
 ```mermaid
 flowchart TD
@@ -15,17 +15,17 @@ flowchart TD
     S -->|mode: movie_release| DMR[discover_movie_releases]
     DGN --> SEL[select_items]
     DMR --> SEL
-    SEL -->|selezione vuota, tentativi rimasti| REF[refine_query]
-    SEL -->|selezione ok o tentativi esauriti - Send per item| PI[process_item]
+    SEL -->|empty selection, attempts remaining| REF[refine_query]
+    SEL -->|selection ok or attempts exhausted - Send per item| PI[process_item]
     REF -->|mode: generic_news| DGN
     REF -->|mode: movie_release| DMR
     PI --> E([END])
 ```
 
-- **`discover_generic_news`** / **`discover_movie_releases`**: raccolgono spunti (ricerca Tavily + estrazione strutturata), a seconda della modalità. I film in uscita vengono letti da un CSV locale (`data/movies.csv`), non più da Google Calendar.
-- **`select_items`**: seleziona fino a `MAX_POSTS_PER_RUN` spunti, scartando quelli già trattati negli ultimi `HISTORY_WINDOW_DAYS` giorni (storico persistente in `data/history.json`).
-- **`refine_query`**: se tutti gli spunti vengono scartati, un nodo LLM riformula la direzione di ricerca e si torna alla discovery (massimo `MAX_DISCOVERY_ATTEMPTS` tentativi totali).
-- **`process_item`**: per ogni spunto selezionato (eseguito in parallelo via `Send`), approfondisce con una ricerca mirata, scrive il post, genera l'immagine (coerente con il template di brand in `data/brand_template.png`) e salva entrambi su disco.
+- **`discover_generic_news`** / **`discover_movie_releases`**: gather ideas (Tavily search + structured extraction), depending on the mode. Upcoming movies are read from a local CSV (`data/movies.csv`), no longer from Google Calendar.
+- **`select_items`**: selects up to `MAX_POSTS_PER_RUN` ideas, discarding those already covered in the last `HISTORY_WINDOW_DAYS` days (persistent history in `data/history.json`).
+- **`refine_query`**: if all ideas are discarded, an LLM node rephrases the search direction and returns to discovery (maximum `MAX_DISCOVERY_ATTEMPTS` total attempts).
+- **`process_item`**: for each selected idea (run in parallel via `Send`), digs deeper with a focused search, writes the post, generates the image (consistent with the brand template in `data/brand_template.png`) and saves both to disk.
 
 ## Setup
 
@@ -34,56 +34,56 @@ uv sync
 cp .env.example .env
 ```
 
-Compila `.env` con:
-- `OPENAI_API_KEY` — usata per tutti gli LLM (testo) e per la generazione immagini (gpt-image-2)
-- `TAVILY_API_KEY` — ricerca web ([tavily.com](https://tavily.com))
+Fill in `.env` with:
+- `OPENAI_API_KEY` — used for all LLMs (text) and for image generation (gpt-image-2)
+- `TAVILY_API_KEY` — web search ([tavily.com](https://tavily.com))
 
-Serve anche:
-- `data/movies.csv` — colonne `titolo,data_uscita,data_proiezione`
-- `data/brand_template.png` — immagine di riferimento per stile/logo/palette dei post generati
+Also required:
+- `data/movies.csv` — columns `title,release_date,screening_date`
+- `data/brand_template.png` — reference image for style/logo/palette of generated posts
 
-## Uso
+## Usage
 
 ```bash
 uv run social-media-manager-agent --mode generic_news
 uv run social-media-manager-agent --mode movie_release
 ```
 
-Output: un file `.json` per post in `output/posts/` e l'immagine corrispondente in `output/images/`.
+Output: one `.json` file per post in `output/posts/` and the corresponding image in `output/images/`.
 
-## Configurazione
+## Configuration
 
-Tutti i parametri numerici/di comportamento sono in `.env`, nessun valore hardcoded nel codice:
+All numeric/behavioral parameters are in `.env`, no hardcoded values in the code:
 
-| Variabile | Descrizione | Default |
+| Variable | Description | Default |
 |---|---|---|
-| `DEFAULT_MODEL` | Modello OpenAI di default per tutti i nodi testuali | `gpt-4o-mini` |
-| `MODEL_<NOME_NODO>` | Override modello per singolo nodo (es. `MODEL_WRITE_POST=gpt-4o`) | — |
-| `MAX_POSTS_PER_RUN` | Numero massimo di post generati per esecuzione | `3` |
-| `BROAD_SEARCH_RESULTS` | Risultati Tavily per la ricerca ampia (notizie generiche) | `10` |
-| `MOVIE_SEARCH_RESULTS` | Risultati Tavily per la ricerca ampia per film | `6` |
-| `FOCUSED_SEARCH_RESULTS` | Risultati Tavily per la ricerca di approfondimento | `4` |
-| `HISTORY_WINDOW_DAYS` | Finestra (giorni) usata per evitare argomenti duplicati | `15` |
-| `MAX_DISCOVERY_ATTEMPTS` | Tentativi massimi di discovery prima di arrendersi | `2` |
-| `IMAGE_MODEL` | Modello per la generazione immagini | `gpt-image-2` |
-| `IMAGE_SIZE` | Dimensione immagine generata | `1024x1024` |
-| `IMAGE_QUALITY` | Qualità immagine generata | `low` |
-| `SAVE_FOLDER` | Cartella JSON dei post | `./output/posts` |
-| `IMAGES_FOLDER` | Cartella immagini generate | `./output/images` |
-| `MOVIES_CSV_PATH` | Path del CSV film in uscita | `./data/movies.csv` |
-| `BRAND_TEMPLATE_PATH` | Path dell'immagine di brand identity | `./data/brand_template.png` |
-| `HISTORY_PATH` | Path dello storico post | `./data/history.json` |
+| `DEFAULT_MODEL` | Default OpenAI model for all text nodes | `gpt-4o-mini` |
+| `MODEL_<NODE_NAME>` | Model override for a single node (e.g. `MODEL_WRITE_POST=gpt-4o`) | — |
+| `MAX_POSTS_PER_RUN` | Maximum number of posts generated per run | `3` |
+| `BROAD_SEARCH_RESULTS` | Tavily results for the broad search (generic news) | `10` |
+| `MOVIE_SEARCH_RESULTS` | Tavily results for the broad search for movies | `6` |
+| `FOCUSED_SEARCH_RESULTS` | Tavily results for the in-depth search | `4` |
+| `HISTORY_WINDOW_DAYS` | Window (days) used to avoid duplicate topics | `15` |
+| `MAX_DISCOVERY_ATTEMPTS` | Maximum discovery attempts before giving up | `2` |
+| `IMAGE_MODEL` | Model used for image generation | `gpt-image-2` |
+| `IMAGE_SIZE` | Generated image size | `1024x1024` |
+| `IMAGE_QUALITY` | Generated image quality | `low` |
+| `SAVE_FOLDER` | Folder for post JSON files | `./output/posts` |
+| `IMAGES_FOLDER` | Folder for generated images | `./output/images` |
+| `MOVIES_CSV_PATH` | Path to the upcoming movies CSV | `./data/movies.csv` |
+| `BRAND_TEMPLATE_PATH` | Path to the brand identity image | `./data/brand_template.png` |
+| `HISTORY_PATH` | Path to the post history | `./data/history.json` |
 
-## Test
+## Tests
 
 ```bash
 uv run pytest tests/ -v
 ```
 
-Tutti i test sono deterministici e non fanno chiamate di rete reali (LLM e ricerca sono mockati dove necessario, o testati come puro I/O su file temporanei).
+All tests are deterministic and make no real network calls (LLM and search are mocked where needed, or tested as pure I/O on temporary files).
 
-## Limitazioni note
+## Known limitations
 
-- Nessuna pubblicazione automatica sui social: l'output è JSON + immagine pronti, la pubblicazione è un passo futuro.
-- La lista dei film in uscita è manuale (CSV), non sincronizzata con fonti esterne.
-- `legacy_adk_reference/` contiene il prototipo originale su Google ADK/Gemini, mantenuto localmente come riferimento storico (escluso dal repo via `.gitignore`).
+- No automatic publishing to social media: the output is JSON + image ready to go, publishing is a future step.
+- The list of upcoming movies is manual (CSV), not synced with external sources.
+- `legacy_adk_reference/` contains the original prototype on Google ADK/Gemini, kept locally as a historical reference (excluded from the repo via `.gitignore`).

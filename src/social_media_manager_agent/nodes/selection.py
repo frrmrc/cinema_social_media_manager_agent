@@ -4,19 +4,19 @@ from social_media_manager_agent.state import GraphState
 from social_media_manager_agent.tools.history import append_to_history, format_history, load_recent_history
 from social_media_manager_agent.config import get_settings
 
-SELECTION_PROMPT = """Di seguito una lista di spunti di notizia sul mondo del cinema.
-Seleziona al massimo {max_items} spunti più rilevanti per promuovere un cinema sui social media,
-motivando brevemente la scelta per ciascuno. L'obiettivo è sempre quello di promuovere le nostre sale: seleziona coerentemente con questo.
+SELECTION_PROMPT = """Below is a list of news ideas about the movie world.
+Select at most {max_items} of the most relevant ideas for promoting a cinema on social media,
+briefly explaining the reasoning for each. The goal is always to promote our theaters: select consistently with this.
 
-NON selezionare spunti che trattano lo stesso argomento (anche con parole diverse) di uno di questi,
-già pubblicati negli ultimi {history_days} giorni:
+DO NOT select ideas that cover the same topic (even with different wording) as any of these,
+already published in the last {history_days} days:
 {history}
 
-Spunti disponibili:
+Available ideas:
 {candidates}
 
-Se NESSUNO spunto disponibile è utilizzabile perché tutti coincidono con argomenti già trattati,
-ritorna una lista vuota.
+If NO available idea is usable because they all overlap with already-covered topics,
+return an empty list.
 """
 
 
@@ -24,7 +24,7 @@ ritorna una lista vuota.
 def _format_candidates(candidates) -> str:
     return "\n\n".join(
         f"- {c.title}\n  {c.summary}"
-        + (f"\n  (film collegato: {c.related_movie_title})" if c.related_movie_title else "")
+        + (f"\n  (related movie: {c.related_movie_title})" if c.related_movie_title else "")
         for c in candidates
     )
 

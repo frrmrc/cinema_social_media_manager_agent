@@ -10,8 +10,8 @@ def test_load_recent_history_filters_old_entries(tmp_path):
     old = (date.today() - timedelta(days=30)).isoformat()
     history_file.write_text(
         json.dumps([
-            {"title": "Recente", "summary": "...", "related_movie_title": None, "created_at": recent},
-            {"title": "Vecchia", "summary": "...", "related_movie_title": None, "created_at": old},
+            {"title": "Recent", "summary": "...", "related_movie_title": None, "created_at": recent},
+            {"title": "Old", "summary": "...", "related_movie_title": None, "created_at": old},
         ]),
         encoding="utf-8",
     )
@@ -19,4 +19,4 @@ def test_load_recent_history_filters_old_entries(tmp_path):
     entries = load_recent_history(days=15, history_path=history_file)
 
     assert len(entries) == 1
-    assert entries[0].title == "Recente"
+    assert entries[0].title == "Recent"
