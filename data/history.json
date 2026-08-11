@@ -1,0 +1,104 @@
+[
+  {
+    "title": "Titolo A",
+    "summary": "...",
+    "related_movie_title": null,
+    "created_at": "2026-08-10"
+  },
+  {
+    "title": "Cinema Revolution: biglietti a 3,50 euro",
+    "summary": "Il Sottosegretario alla Cultura annuncia una nuova edizione di Cinema Revolution, che offre biglietti a prezzo ridotto per film italiani ed europei.",
+    "related_movie_title": null,
+    "created_at": "2026-08-10"
+  },
+  {
+    "title": "Eurimages torna in Italia dopo 9 anni",
+    "summary": "Il Board of Management di Eurimages si riunisce in Italia per la prima volta dopo nove anni, discutendo di collaborazioni e opportunità nel settore cinematografico.",
+    "related_movie_title": null,
+    "created_at": "2026-08-10"
+  },
+  {
+    "title": "Nuovo direttore artistico per i David di Donatello",
+    "summary": "Gian Luca Farinelli, responsabile della Cineteca di Bologna, è stato nominato nuovo direttore artistico dell'Accademia del Cinema Italiano.",
+    "related_movie_title": null,
+    "created_at": "2026-08-10"
+  },
+  {
+    "title": "Odissea: un kolossal da record",
+    "summary": "Il film 'Odissea' ha superato i 40 milioni di euro al box office italiano, diventando uno dei maggiori incassi della storia del cinema nel paese.",
+    "related_movie_title": "Odissea",
+    "created_at": "2026-08-10"
+  },
+  {
+    "title": "Spider-Man: Brand New Day fa il botto",
+    "summary": "Il nuovo film di Spider-Man con Tom Holland ha registrato il miglior debutto della saga in Italia, superando anche l'apertura di 'Spider-Man: No Way Home'.",
+    "related_movie_title": "Spider-Man: Brand New Day",
+    "created_at": "2026-08-10"
+  },
+  {
+    "title": "Riforma della Legge Cinema rinviata",
+    "summary": "La nuova riforma della Legge Cinema in Italia è stata rinviata a settembre, mentre il Fondo per il cinema verrà incrementato di 200 milioni di euro.",
+    "related_movie_title": null,
+    "created_at": "2026-08-10"
+  },
+  {
+    "title": "Charlie Cox parla del suo possibile ritorno in Daredevil",
+    "summary": "L'attore Charlie Cox ha risposto ai rumor riguardanti il suo ritorno nel ruolo di Daredevil in 'Avengers: Secret Wars', alimentando le speranze dei fan.",
+    "related_movie_title": "Avengers: Secret Wars",
+    "created_at": "2026-08-10"
+  },
+  {
+    "title": "Il cinema italiano in crisi: analisi e soluzioni",
+    "summary": "Un video analizza le ragioni del declino del cinema italiano, discutendo di fondi, politiche e l'importanza della sala cinematografica.",
+    "related_movie_title": null,
+    "created_at": "2026-08-10"
+  },
+  {
+    "title": "Il flop di Oceania e Mandalorian non ferma la Disney",
+    "summary": "Nonostante i recenti insuccessi, Disney continua a investire in nuovi progetti, inclusi videogiochi e altre produzioni.",
+    "related_movie_title": null,
+    "created_at": "2026-08-10"
+  },
+  {
+    "title": "Titolo A",
+    "summary": "...",
+    "related_movie_title": null,
+    "created_at": "2026-08-10"
+  },
+  {
+    "title": "Odissea: un successo al box office",
+    "summary": "Il film 'Odissea' ha superato i 40 milioni di euro al box office italiano, diventando uno dei maggiori incassi della storia del cinema nel paese.",
+    "related_movie_title": "Odissea",
+    "created_at": "2026-08-11"
+  },
+  {
+    "title": "Cinema Revolution: biglietti a 3,50 euro",
+    "summary": "Il Sottosegretario alla Cultura annuncia una nuova edizione di Cinema Revolution, che offre biglietti a prezzo ridotto per film italiani ed europei, per incentivare la visione in sala.",
+    "related_movie_title": null,
+    "created_at": "2026-08-11"
+  },
+  {
+    "title": "Intese Italia-Francia per il cinema",
+    "summary": "Durante un vertice Italia-Francia, sono state concluse intese per la tutela del patrimonio culturale e la collaborazione nel settore del cinema e dell'audiovisivo.",
+    "related_movie_title": null,
+    "created_at": "2026-08-11"
+  },
+  {
+    "title": "41a edizione della Settimana Internazionale della Critica",
+    "summary": "La SIC presenterà sette opere prime dal 2 al 12 settembre nell'ambito della Mostra Internazionale d'Arte Cinematografica di Venezia.",
+    "related_movie_title": null,
+    "created_at": "2026-08-11"
+  },
+  {
+    "title": "Presentazione del sistema Italia a Cannes",
+    "summary": "L'Italia si presenta al Festival di Cannes con il messaggio 'Italy offers everything you need', promuovendo il proprio sistema cinematografico.",
+    "related_movie_title": null,
+    "created_at": "2026-08-11"
+  },
+  {
+    "title": "41a edizione della Settimana Internazionale della Critica",
+    "summary": "La SIC presenterà sette opere prime dal 2 al 12 settembre nell'ambito della Mostra Internazionale d'Arte Cinematografica di Venezia.",
+    "related_movie_title": null,
+    "created_at": "2026-08-11"
+  }
+]
