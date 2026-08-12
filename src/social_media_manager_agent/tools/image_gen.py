@@ -26,8 +26,7 @@ def generate_image_bytes(post: Post) -> bytes:
             prompt=IMAGE_PROMPT.format(title=post.title, style=post.style, body=post.body),
             size=settings.image_size,
             quality=settings.image_quality,
-            n=1,
-            moderation = 'low'
+            n=1
 
         )
         
