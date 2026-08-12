@@ -100,5 +100,17 @@
     "summary": "The SIC will present seven debut films from September 2 to 12 as part of the Venice International Film Festival.",
     "related_movie_title": null,
     "created_at": "2026-08-11"
+  },
+  {
+    "title": "Christopher Nolan's The Odyssey Hits $1 Billion",
+    "summary": "Christopher Nolan's latest film, The Odyssey, has crossed the $1 billion mark at the box office, marking a significant milestone for the director after a long hiatus.",
+    "related_movie_title": "The Odyssey",
+    "created_at": "2026-08-12"
+  },
+  {
+    "title": "Spider-Man: Brand New Day IMAX Release",
+    "summary": "Following a record-shattering opening weekend, Spider-Man: Brand New Day is set for an IMAX release, promising an enhanced viewing experience for fans.",
+    "related_movie_title": "Spider-Man: Brand New Day",
+    "created_at": "2026-08-12"
   }
 ]

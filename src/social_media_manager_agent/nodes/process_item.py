@@ -1,3 +1,5 @@
+import logging
+
 from social_media_manager_agent.models import get_llm
 from social_media_manager_agent.schemas import SelectedItem
 from social_media_manager_agent.tools.search import focused_search, format_results
@@ -8,6 +10,8 @@ from datetime import date
 from social_media_manager_agent.config import get_settings
 from social_media_manager_agent.tools.image_gen import generate_image_bytes
 from social_media_manager_agent.tools.storage import save_image, save_post
+
+logger = logging.getLogger(__name__)
 
 
 GROUNDING_PROMPT = """Your task is ONLY to gather and summarize concrete facts found in the search results.
@@ -76,12 +80,17 @@ def write_post(item: SelectedItem, briefing: str) -> Post:
 
 def process_item(state: GraphState) -> dict:
     item = state["selected_items"][0]
-    briefing = ground_item(item)
-    post = write_post(item, briefing)
+    try:
+        briefing = ground_item(item)
+        post = write_post(item, briefing)
 
-    image_bytes = generate_image_bytes(post)
-    image_path = save_image(image_bytes, post)
-    post.image_path = str(image_path)
+        image_bytes = generate_image_bytes(post)
+        if image_bytes is not None:
+            image_path = save_image(image_bytes, post)
+            post.image_path = str(image_path)
 
-    save_post(post)
-    return {"posts": [post]}
+        save_post(post)
+        return {"posts": [post]}
+    except Exception:
+        logger.warning("Skipping item '%s'", item.title, exc_info=True)
+        return {"posts": [], "skipped_items": [item.title]}

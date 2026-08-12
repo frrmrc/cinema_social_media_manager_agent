@@ -14,3 +14,4 @@ class GraphState(TypedDict):
     discovery_attempt: int
     search_hint: str | None
     posts: Annotated[list[Post], operator.add]
+    skipped_items: Annotated[list[str], operator.add]

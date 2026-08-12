@@ -21,6 +21,7 @@ class Settings(BaseSettings):
 
     brand_template_path: Path = Path("data/brand_template.png")
     images_folder: Path = Path("output/images")
+    log_path: Path = Path("output/agent.log")
 
     image_model: str = "gpt-image-2"
     image_size: str = "1024x1024"

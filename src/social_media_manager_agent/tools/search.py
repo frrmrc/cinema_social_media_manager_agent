@@ -1,12 +1,12 @@
 from langchain_tavily import TavilySearch
-
 from social_media_manager_agent.config import get_settings
+from tenacity import retry, stop_after_attempt, wait_exponential
 
-
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def _search(query: str, max_results: int) -> list[dict]:
     settings = get_settings()
     tool = TavilySearch(max_results=max_results, tavily_api_key=settings.tavily_api_key)
-    response = tool.invoke({"query": query})
+    response = tool.invoke({"query": query[:400]})
     return response["results"]
 
 def broad_search(query: str, max_results: int = 8) -> list[dict]:
