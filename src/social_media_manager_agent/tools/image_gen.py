@@ -14,15 +14,31 @@ Include a short, engaging text in the image (maximum one sentence, poster-style)
 Title: {title}
 Style: {style}
 Content: {body}
+Language: {post_language}
 
 You have creative freedom when designing the image: you can add new and content-related icons, graphics, illustrations, and shapes inspired by the brand identity and consistent with it.
+Prefer graphics, illustrations, shapes over text walls.
 """
 
-IMAGE_PROMPT_FALLBACK = """Generate a simple, safe social media image for a cinema, following the layout of the attached brand identity template (font, color palette, visual tone consistent with the template).
+IMAGE_PROMPT_FALLBACK = """
+Generate a social media image for a cinema using the attached brand identity template as the primary visual reference. Preserve the template’s overall visual language, including typography, color palette, composition style, and tone. You may reuse simple icons, shapes, or graphic elements from the template when appropriate.
 
-Keep the image minimal and tasteful: use only the brand template's graphic elements (icons, shapes, colors) plus the following title as short text overlay. Avoid depicting people, violence, weapons, or any sensitive imagery.
+Create a clean, original, cinema-related visual inspired by the following social media post:
 
 Title: {title}
+Style: {style}
+Content: {body}
+Language: {post_language}
+
+Include one short, engaging poster-style sentence in {post_language}, with a maximum of one sentence. Keep the text concise and visually secondary to the main graphic.
+
+Use creative freedom to develop the visual: add simple cinema-related illustrations, icons, abstract shapes, or decorative elements that fit the brand identity. Prioritize visual communication over large amounts of text.
+
+Avoid depicting identifiable real people, graphic violence, sexual content, illegal activities, or other potentially sensitive imagery. If the subject matter could be visually sensitive, represent it through neutral cinematic symbolism, abstract graphics, objects, environments, or typography instead.
+
+The final image should feel like an authentic branded cinema social media post, polished, contemporary, and visually coherent with the supplied template.
+
+
 """
 
 
@@ -43,7 +59,7 @@ def generate_image_bytes(post: Post) -> bytes | None:
     settings = get_settings()
     client = OpenAI(api_key=settings.openai_api_key)
 
-    primary_prompt = IMAGE_PROMPT.format(title=post.title, style=post.style, body=post.body)
+    primary_prompt = IMAGE_PROMPT.format(title=post.title, style=post.style, body=post.body, post_language=settings.post_language)
     try:
         return _edit_image(client, settings, primary_prompt)
     except BadRequestError as exc:

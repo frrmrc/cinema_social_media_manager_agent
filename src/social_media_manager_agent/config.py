@@ -7,7 +7,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     openai_api_key: str
     tavily_api_key: str
-    
+
+    cinema_name: str
+    post_language: str
+
     default_model: str = "gpt-4o-mini"
     save_folder: Path = Path("output/posts")
     movies_csv_path: Path = Path("data/movies.csv")

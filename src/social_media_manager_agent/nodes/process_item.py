@@ -26,12 +26,24 @@ Search results:
 Write a bullet list (at most 5 points) of the most concrete and verifiable details found in the search
 (precise dates, names, numbers, direct quotes). This text will serve as raw material for another
 process that will write the actual post — it is not the post itself.
+
+If the search results do not contain concrete, verifiable details (exact dates, times, prices, names,
+numbers, direct quotes), say so explicitly instead of leaving room for guessing — e.g. "No specific
+verifiable details found beyond the general idea." Do not fill gaps with plausible-sounding assumptions.
 """
 
-WRITE_POST_PROMPT = """Write an Instagram post for a cinema, in English, based on the following facts.
-You can use relevant emoji and hashtags, engaging tone — here, unlike the briefing, the final post is exactly what you want.
-Base it only on the provided facts, do not invent details.
+WRITE_POST_PROMPT = """Write an Instagram post for {cinema_name}, in {post_language}, based on the following facts.
+You can use relevant emoji and hashtags, engaging tone.
 
+Use ONLY the facts listed below. Do not invent dates, times, prices, names, quotes, or example content
+(e.g. do not make up quiz questions, schedules, or trivia facts if none are given in the briefing) — if a
+detail isn't in the facts, phrase the post more generally instead (e.g. "join our regular movie nights"
+rather than inventing "every Thursday at 7 PM"). Always refer to the cinema as "{cinema_name}", never a
+placeholder like "[Cinema Name]".
+
+Include a clear call-to-action inviting the audience to visit {cinema_name}, it is not mandatory that the call to action is consistent with the topic of the post.
+
+The goal of the post is to keep our community engaged with interesting news about the cinema world. The goal is not to promote movies now playing in out theaters.  
 Today is {today}.
 
 Idea: "{title}"
@@ -40,7 +52,7 @@ Idea: "{title}"
 Facts gathered from the search:
 {briefing}
 
-Choose a suitable style (e.g. Informative, Celebratory, Teaser) and a plausible publish date/time
+Choose a suitable style (e.g. Informative, Celebratory, Teaser, Gossip) and a plausible publish date/time
 in the next few days from today (format YYYY-MM-DDTHH:MM:SS).
 """
 
@@ -65,10 +77,13 @@ def ground_item(item: SelectedItem) -> str:
     return briefing.content
 
 def write_post(item: SelectedItem, briefing: str) -> Post:
+    settings = get_settings()
     llm = get_llm("write_post")
     movie_context = f"Related movie: {item.related_movie_title}" if item.related_movie_title else ""
     post = llm.with_structured_output(Post).invoke(
         WRITE_POST_PROMPT.format(
+            cinema_name=settings.cinema_name,
+            post_language=settings.post_language,
             today=date.today().isoformat(),
             title=item.title,
             movie_context=movie_context,
