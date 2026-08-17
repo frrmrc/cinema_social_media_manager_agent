@@ -3,8 +3,7 @@ from social_media_manager_agent.tools.storage import save_post
 
 
 def test_save_post_writes_json_file(tmp_path):
-    post = Post(title="Zootropolis 2: back in theaters!", body="...", style="Informative",
-                publish_at="2025-12-01T10:00:00")
+    post = Post(title="Zootropolis 2: back in theaters!", body="...", style="Informative")
 
     path = save_post(post, save_folder=tmp_path)
 
@@ -13,7 +12,7 @@ def test_save_post_writes_json_file(tmp_path):
 
 
 def test_save_post_sanitizes_special_characters(tmp_path):
-    post = Post(title="Movie: 'Special'?!", body="...", style="Teaser", publish_at="2025-12-01T10:00:00")
+    post = Post(title="Movie: 'Special'?!", body="...", style="Teaser")
 
     path = save_post(post, save_folder=tmp_path)
 

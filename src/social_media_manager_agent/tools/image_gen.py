@@ -67,7 +67,9 @@ def generate_image_bytes(post: Post) -> bytes | None:
             raise
         logger.warning("Image blocked by moderation for '%s', retrying with a sanitized prompt", post.title)
 
-    fallback_prompt = IMAGE_PROMPT_FALLBACK.format(title=post.title)
+    fallback_prompt = IMAGE_PROMPT_FALLBACK.format(
+        title=post.title, style=post.style, body=post.body, post_language=settings.post_language
+    )
     try:
         return _edit_image(client, settings, fallback_prompt)
     except BadRequestError as exc:

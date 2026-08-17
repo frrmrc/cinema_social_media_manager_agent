@@ -3,7 +3,7 @@ import logging
 from social_media_manager_agent.models import get_llm
 from social_media_manager_agent.schemas import SelectedItem
 from social_media_manager_agent.tools.search import focused_search, format_results
-from social_media_manager_agent.schemas import Post
+from social_media_manager_agent.schemas import DraftPost, Post
 from social_media_manager_agent.state import GraphState
 from social_media_manager_agent.tools.storage import save_post
 from datetime import date
@@ -14,7 +14,7 @@ from social_media_manager_agent.tools.storage import save_image, save_post
 logger = logging.getLogger(__name__)
 
 
-GROUNDING_PROMPT = """Your task is ONLY to gather and summarize concrete facts found in the search results.
+GROUNDING_PROMPT = """Your task is ONLY to gather concrete facts found in the search results.
 Do NOT write a post, do NOT use emoji, do NOT use hashtags, do NOT address the audience directly.
 
 Idea to research: "{title}" — {summary}
@@ -52,8 +52,7 @@ Idea: "{title}"
 Facts gathered from the search:
 {briefing}
 
-Choose a suitable style (e.g. Informative, Celebratory, Teaser, Gossip) and a plausible publish date/time
-in the next few days from today (format YYYY-MM-DDTHH:MM:SS).
+Choose a suitable style (e.g. Informative, Celebratory, Teaser, Gossip).
 """
 
 
@@ -80,7 +79,7 @@ def write_post(item: SelectedItem, briefing: str) -> Post:
     settings = get_settings()
     llm = get_llm("write_post")
     movie_context = f"Related movie: {item.related_movie_title}" if item.related_movie_title else ""
-    post = llm.with_structured_output(Post).invoke(
+    draft = llm.with_structured_output(DraftPost).invoke(
         WRITE_POST_PROMPT.format(
             cinema_name=settings.cinema_name,
             post_language=settings.post_language,
@@ -90,8 +89,12 @@ def write_post(item: SelectedItem, briefing: str) -> Post:
             briefing=briefing,
         )
     )
-    post.related_movie_title = item.related_movie_title
-    return post
+    return Post(
+        title=draft.title,
+        body=draft.body,
+        style=draft.style,
+        related_movie_title=item.related_movie_title,
+    )
 
 def process_item(state: GraphState) -> dict:
     item = state["selected_items"][0]

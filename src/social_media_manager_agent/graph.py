@@ -9,6 +9,7 @@ from social_media_manager_agent.nodes.discovery import (
 from social_media_manager_agent.nodes.selection import select_items
 from social_media_manager_agent.state import GraphState
 from social_media_manager_agent.nodes.process_item import process_item
+from social_media_manager_agent.nodes.review_posts import review_posts
 from social_media_manager_agent.config import get_settings
 
 
@@ -30,6 +31,7 @@ def build_graph():
     graph.add_edge("discover_movie_releases", "select_items")
 
     graph.add_node("process_item", process_item)
+    graph.add_node("review_posts", review_posts)
 
     graph.add_node("refine_query", refine_query)
 
@@ -40,7 +42,8 @@ def build_graph():
     route_discovery,
     {"discover_generic_news": "discover_generic_news", "discover_movie_releases": "discover_movie_releases"},
 )
-    graph.add_edge("process_item", END)
+    graph.add_edge("process_item", "review_posts")
+    graph.add_edge("review_posts", END)
 
     return graph.compile()
 

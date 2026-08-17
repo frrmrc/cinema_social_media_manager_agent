@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,6 +30,14 @@ class Settings(BaseSettings):
     image_model: str = "gpt-image-2"
     image_size: str = "1024x1024"
     image_quality: str = "low"
+
+    imgbb_api_key: str
+    # imgbb silently disables expiration (treats it as "never expire") for values outside
+    # its documented 60-15552000 range, instead of rejecting the request.
+    imgbb_expiration_seconds: int = Field(default=600, ge=60, le=15552000)
+    ig_user_id: str
+    ig_access_token: str
+    graph_api_version: str = "v21.0"
 
 def get_settings() -> Settings:
     return Settings()

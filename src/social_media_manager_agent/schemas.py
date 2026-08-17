@@ -24,13 +24,39 @@ class SelectedItems(BaseModel):
     items: list[SelectedItem] = Field( description="Ideas selected for generating a post" )
 
 
+class DraftPost(BaseModel):
+    title: str = Field(description="Post title")
+    body: str = Field(description="Post body, ready for publication")
+    style: str = Field(description="Post style (e.g. Informative, Celebratory, Teaser)")
+    related_movie_title: str | None = None
+
+
 class Post(BaseModel):
     title: str = Field(description="Post title")
     body: str = Field(description="Post body, ready for publication")
     style: str = Field(description="Post style (e.g. Informative, Celebratory, Teaser)")
-    publish_at: str = Field(description="Suggested publish date/time (YYYY-MM-DDTHH:MM:SS)")
     related_movie_title: str | None = None
     image_path: str | None = None
+    approved: bool | None = Field(default=None, description="Reviewer's approval decision")
+    scheduled_at: str | None = Field(
+        default=None, description="Publish date/time chosen by the reviewer (YYYY-MM-DDTHH:MM:SS)"
+    )
+    rejection_reason: str | None = Field(default=None, description="Reviewer's reason if not approved")
+    published: bool = False
+    instagram_media_id: str | None = None
+
+
+class PostReview(BaseModel):
+    title: str = Field(description="Title of the post being judged, for grounding/logging")
+    approved: bool = Field(description="Whether this post is ready to publish as-is")
+    scheduled_at: str | None = Field(
+        default=None, description="Required if approved: publish date/time (YYYY-MM-DDTHH:MM:SS)"
+    )
+    reason: str = Field(description="Brief reason for the decision")
+
+
+class PostReviews(BaseModel):
+    reviews: list[PostReview] = Field(description="One review per post, in the same order as given")
 
 
 class CandidateItems(BaseModel):

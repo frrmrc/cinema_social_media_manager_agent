@@ -1430,6 +1430,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "pytest" },
     { name = "python-dotenv" },
+    { name = "requests" },
     { name = "tenacity" },
     { name = "tzlocal" },
 ]
@@ -1446,6 +1447,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.15.0" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
+    { name = "requests", specifier = ">=2.32.0" },
     { name = "tenacity", specifier = ">=9.1.4" },
     { name = "tzlocal", specifier = ">=5.4.4" },
 ]
