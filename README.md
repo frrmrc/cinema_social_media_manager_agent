@@ -54,7 +54,7 @@ Fill in `.env` with:
 - `IG_USER_ID`, `IG_ACCESS_TOKEN` — from a Meta developer app with Instagram API access. **Important**: which Graph API host to use depends on how the token was issued — see [Instagram publishing notes](#instagram-publishing-notes) below, this trips people up.
 
 Also required:
-- `data/movies.csv` — columns `title,release_date,screening_date`
+- `data/movies.csv` — columns `title,release_date`
 - `data/brand_template.png` — reference image for style/logo/palette of generated posts
 
 ## Usage
@@ -169,5 +169,3 @@ calls are all mocked where needed, or tested as pure I/O on temporary files).
 ## Known limitations
 
 - The list of upcoming movies is manual (CSV), not synced with external sources.
-- No cross-run locking on `publish-due` — don't run it concurrently with itself, or a post could in
-  theory get published twice if two runs both read it as not-yet-published before either writes back.

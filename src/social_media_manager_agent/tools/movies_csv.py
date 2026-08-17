@@ -13,7 +13,6 @@ def load_upcoming_movies(csv_path: Path | None = None) -> list[MovieRelease]:
             MovieRelease(
                 title=row["title"],
                 release_date=row["release_date"],
-                screening_date=row["screening_date"],
             )
             for row in reader
         ]

@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 class MovieRelease(BaseModel):
     title: str = Field(description="Movie title")
     release_date: str = Field(description="Movie release date (YYYY-MM-DD)")
-    screening_date: str = Field(description="Screening date/time in theater (YYYY-MM-DDTHH:MM:SS)")
 
 class CandidateItem(BaseModel):
     title: str = Field(description="Short title of the news item or idea")
