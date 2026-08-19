@@ -3,9 +3,8 @@ import logging
 from social_media_manager_agent.models import get_llm
 from social_media_manager_agent.schemas import SelectedItem
 from social_media_manager_agent.tools.search import focused_search, format_results
-from social_media_manager_agent.schemas import DraftPost, Post
+from social_media_manager_agent.schemas import DraftPost, MovieRelease, Post
 from social_media_manager_agent.state import GraphState
-from social_media_manager_agent.tools.storage import save_post
 from datetime import date
 from social_media_manager_agent.config import get_settings
 from social_media_manager_agent.tools.image_gen import generate_image_bytes
@@ -41,9 +40,15 @@ detail isn't in the facts, phrase the post more generally instead (e.g. "join ou
 rather than inventing "every Thursday at 7 PM"). Always refer to the cinema as "{cinema_name}", never a
 placeholder like "[Cinema Name]".
 
+Lead with the facts that make the film exciting to watch (the hook, cast/director, why it's generating
+buzz) — that's what should carry the post. For secondary, hard-to-pin-down details the briefing may contain
+(exact release dates in other countries, precise festival categories, technical cinematography credits),
+reference them loosely instead of as precise figures (e.g. "already creating buzz abroad" rather than naming
+a specific foreign release date) — precision on those isn't the point of the post.
+
 Include a clear call-to-action inviting the audience to visit {cinema_name}, it is not mandatory that the call to action is consistent with the topic of the post.
 
-The goal of the post is to keep our community engaged with interesting news about the cinema world. The goal is not to promote movies now playing in out theaters.  
+{mode_note}
 Today is {today}.
 
 Idea: "{title}"
@@ -53,7 +58,36 @@ Facts gathered from the search:
 {briefing}
 
 Choose a suitable style (e.g. Informative, Celebratory, Teaser, Gossip).
+
+Do not format the output with italic, bold, etc using asterisks or other symbols.
 """
+
+GENERIC_NEWS_MODE_NOTE = (
+    "This idea is general cinema-industry news, not necessarily a movie {cinema_name} is screening. The goal "
+    "of THIS post is to keep our community engaged with interesting news about the cinema world in general, "
+    "not to promote a specific screening — do not imply {cinema_name} is showing this movie unless the facts "
+    "say so."
+)
+
+
+def _movie_release_mode_note(cinema_name: str, movie_title: str, release_date: str | None) -> str:
+    date_clause = f", starting {release_date}" if release_date else ""
+    must_mention = (
+        f'clearly mention the movie title "{movie_title}" and that it\'s coming to {cinema_name}{date_clause}'
+        if release_date
+        else f'clearly mention the movie title "{movie_title}"'
+    )
+    return (
+        f'This post is specifically about the movie "{movie_title}", which {cinema_name} is actually '
+        f'screening{date_clause} (confirmed, from our own lineup). The goal of THIS post is to promote '
+        f'"{movie_title}" and make people want to come watch it at {cinema_name}: build curiosity around it, '
+        f'lead with the most interesting news/trivia/gossip about it, and make the film itself the hook of the '
+        f'post. The post MUST {must_mention}. '
+        f'Never write information about availability of the movie on streaming and streaming platforms brands like Netflix, '
+        f'Disney+, Prime, etc. Never give information about streaming. period.'
+        f'Skip completly the country-availability topic: never give information about the countries where the movie is available ( like USA, United Kingdom, Mexico, India, etc.). '
+        f' do not say something like "U.S. release date: August 21, 2026." or "Available in Germany from January 15, 2027" '
+    )
 
 
 
@@ -75,10 +109,30 @@ def ground_item(item: SelectedItem) -> str:
     )
     return briefing.content
 
-def write_post(item: SelectedItem, briefing: str) -> Post:
+def _find_movie(title: str | None, movies: list[MovieRelease]) -> MovieRelease | None:
+    if not title:
+        return None
+    for movie in movies:
+        if movie.title == title:
+            return movie
+    return None
+
+
+def write_post(item: SelectedItem, briefing: str, mode: str | None = None, movie: MovieRelease | None = None) -> Post:
     settings = get_settings()
     llm = get_llm("write_post")
-    movie_context = f"Related movie: {item.related_movie_title}" if item.related_movie_title else ""
+
+    if mode == "movie_release":
+        movie_title = movie.title if movie else item.related_movie_title
+        release_date = movie.release_date if movie else None
+        movie_context = f"Related movie: {movie_title}"
+        if release_date:
+            movie_context += f" (release date: {release_date})"
+        mode_note = _movie_release_mode_note(settings.cinema_name, movie_title or "this movie", release_date)
+    else:
+        movie_context = f"Related movie: {item.related_movie_title}" if item.related_movie_title else ""
+        mode_note = GENERIC_NEWS_MODE_NOTE.format(cinema_name=settings.cinema_name)
+
     draft = llm.with_structured_output(DraftPost).invoke(
         WRITE_POST_PROMPT.format(
             cinema_name=settings.cinema_name,
@@ -87,6 +141,7 @@ def write_post(item: SelectedItem, briefing: str) -> Post:
             title=item.title,
             movie_context=movie_context,
             briefing=briefing,
+            mode_note=mode_note,
         )
     )
     return Post(
@@ -98,9 +153,11 @@ def write_post(item: SelectedItem, briefing: str) -> Post:
 
 def process_item(state: GraphState) -> dict:
     item = state["selected_items"][0]
+    mode = state.get("mode")
+    movie = _find_movie(item.related_movie_title, state.get("upcoming_movies", []))
     try:
         briefing = ground_item(item)
-        post = write_post(item, briefing)
+        post = write_post(item, briefing, mode, movie)
 
         image_bytes = generate_image_bytes(post)
         if image_bytes is not None:

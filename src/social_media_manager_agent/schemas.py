@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 class MovieRelease(BaseModel):
     title: str = Field(description="Movie title")
     release_date: str = Field(description="Movie release date (YYYY-MM-DD)")
+    post_count: int = Field(default=0, description="Total approved posts generated for this movie, ever")
 
 class CandidateItem(BaseModel):
     title: str = Field(description="Short title of the news item or idea")
@@ -36,6 +37,7 @@ class Post(BaseModel):
     style: str = Field(description="Post style (e.g. Informative, Celebratory, Teaser)")
     related_movie_title: str | None = None
     image_path: str | None = None
+    cloudinary_public_id: str | None = None
     approved: bool | None = Field(default=None, description="Reviewer's approval decision")
     scheduled_at: str | None = Field(
         default=None, description="Publish date/time chosen by the reviewer (YYYY-MM-DDTHH:MM:SS)"

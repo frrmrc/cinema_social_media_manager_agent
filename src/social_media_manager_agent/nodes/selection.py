@@ -43,6 +43,19 @@ def select_items(state: GraphState) -> dict:
             candidates=_format_candidates(state["candidate_items"]),
         )
     )
-    items = selection.items[: settings.max_posts_per_run]
+    items = _dedupe_by_movie(selection.items)[: settings.max_posts_per_run]
     append_to_history(items)
     return {"selected_items": items}
+
+
+def _dedupe_by_movie(items):
+    seen: set[str] = set()
+    deduped = []
+    for item in items:
+        key = item.related_movie_title
+        if key is not None:
+            if key in seen:
+                continue
+            seen.add(key)
+        deduped.append(item)
+    return deduped

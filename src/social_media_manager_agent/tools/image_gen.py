@@ -17,7 +17,8 @@ Content: {body}
 Language: {post_language}
 
 You have creative freedom when designing the image: you can add new and content-related icons, graphics, illustrations, and shapes inspired by the brand identity and consistent with it.
-Prefer graphics, illustrations, shapes over text walls.
+Prefer graphics, illustrations, shapes over text walls and drawings over photo-like images.
+It's not mandatory to use all the applications from the template, use only what's necessary.
 """
 
 IMAGE_PROMPT_FALLBACK = """
@@ -38,6 +39,10 @@ Avoid depicting identifiable real people, graphic violence, sexual content, ille
 
 The final image should feel like an authentic branded cinema social media post, polished, contemporary, and visually coherent with the supplied template.
 
+You have creative freedom when designing the image: you can add new and content-related icons, graphics, illustrations, and shapes inspired by the brand identity and consistent with it.
+Prefer graphics, illustrations, shapes over text walls.
+
+It's not mandatory to use all the applications from the template, use only what's necessary.
 
 """
 

@@ -4,7 +4,11 @@ from pathlib import Path
 
 from social_media_manager_agent.config import get_settings
 from social_media_manager_agent.schemas import Post
-from social_media_manager_agent.tools.imgbb import upload_image_to_imgbb
+from social_media_manager_agent.tools.cloudinary import (
+    delete_image_from_cloudinary,
+    upload_image_to_cloudinary,
+    wait_until_publicly_reachable,
+)
 from social_media_manager_agent.tools.instagram import publish_image_post
 from social_media_manager_agent.tools.storage import save_post
 
@@ -32,6 +36,15 @@ def _is_due(post: Post, now: datetime) -> bool:
     return scheduled <= now
 
 
+def _cleanup_cloudinary_asset(post: Post, public_id: str, folder: Path) -> None:
+    try:
+        delete_image_from_cloudinary(public_id)
+        post.cloudinary_public_id = None
+        save_post(post, save_folder=folder)
+    except Exception:
+        logger.warning("Failed to delete Cloudinary asset %s for '%s'", public_id, post.title, exc_info=True)
+
+
 def publish_due_posts(posts_folder: Path | None = None) -> tuple[list[str], list[str]]:
     folder = posts_folder or get_settings().save_folder
     now = datetime.now()
@@ -49,8 +62,13 @@ def publish_due_posts(posts_folder: Path | None = None) -> tuple[list[str], list
             skipped.append(post.title)
             continue
 
+        public_id: str | None = None
         try:
-            image_url = upload_image_to_imgbb(Path(post.image_path))
+            image_url, public_id = upload_image_to_cloudinary(Path(post.image_path))
+            post.cloudinary_public_id = public_id
+            save_post(post, save_folder=folder)
+
+            wait_until_publicly_reachable(image_url)
             media_id = publish_image_post(image_url, post.body)
 
             post.published = True
@@ -58,8 +76,11 @@ def publish_due_posts(posts_folder: Path | None = None) -> tuple[list[str], list
             save_post(post, save_folder=folder)
             published.append(post.title)
             logger.info("Published '%s' to Instagram (media_id=%s)", post.title, media_id)
+            _cleanup_cloudinary_asset(post, public_id, folder)
         except Exception:
             logger.warning("Failed to publish '%s'", post.title, exc_info=True)
             skipped.append(post.title)
+            if public_id is not None:
+                _cleanup_cloudinary_asset(post, public_id, folder)
 
     return published, skipped

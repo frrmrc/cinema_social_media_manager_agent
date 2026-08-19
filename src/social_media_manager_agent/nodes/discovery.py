@@ -1,10 +1,9 @@
 from social_media_manager_agent.models import get_llm
 from social_media_manager_agent.schemas import CandidateItems, CandidateItem
 from social_media_manager_agent.state import GraphState
-from social_media_manager_agent.tools.search import broad_search
-from social_media_manager_agent.tools.movies_csv import load_upcoming_movies
+from social_media_manager_agent.tools.movies_csv import filter_eligible_movies, load_upcoming_movies
 from social_media_manager_agent.tools.search import broad_search, format_results
-from social_media_manager_agent.tools.history import format_history, load_recent_history
+from social_media_manager_agent.tools.history import format_history, load_recent_history, titles_posted_today
 from social_media_manager_agent.config import get_settings
 
 
@@ -33,10 +32,10 @@ Search results:
 {search_results}
 """
 
-MOVIE_NEWS_QUERY_TEMPLATE = "news, reviews, trivia, gossip about '{title}' theatrical release {release_date}"
+MOVIE_NEWS_QUERY_TEMPLATE = "news, reviews, cast, teasers, breaking news, actors, gossip about '{title}',  release date: {release_date}"
 
 MOVIE_EXTRACTION_PROMPT = """Below is a series of search results about the movie "{title}" (release: {release_date}).
-Extract up to 3 distinct, relevant news ideas for a social post, each with a short title and brief summary.
+Extract up to 3 distinct, relevant news ideas for a social media post, each with a short title and brief summary.
 
 Search results:
 {search_results}
@@ -79,6 +78,17 @@ def discover_movie_releases(state: GraphState) -> dict:
     settings = get_settings()
 
     movies = load_upcoming_movies()
+    eligible = filter_eligible_movies(movies, settings=settings)
+    already_posted_today = titles_posted_today()
+    movies = [m for m in eligible if m.title not in already_posted_today]
+
+    if not movies:
+        return {
+            "candidate_items": [],
+            "upcoming_movies": [],
+            "discovery_attempt": settings.max_discovery_attempts,
+        }
+
     hint = state.get("search_hint")
     llm = get_llm("discover_movie_releases")
     all_candidates: list[CandidateItem] = []

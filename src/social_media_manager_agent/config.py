@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,6 +17,9 @@ class Settings(BaseSettings):
     history_path: Path = Path("data/history.json")
     max_discovery_attempts: int = 2
     max_posts_per_run: int = 3
+    movie_window_days_before: int = 7  # how many days after release a movie is still considered "eligible"
+    movie_window_days_after: int = 4  # how many days before release a movie starts being considered
+    max_posts_per_movie: int = 5  # max approved posts ever generated for a single movie
     broad_search_results: int = 10
     movie_search_results: int = 6
     focused_search_results: int = 4
@@ -31,10 +33,9 @@ class Settings(BaseSettings):
     image_size: str = "1024x1024"
     image_quality: str = "low"
 
-    imgbb_api_key: str
-    # imgbb silently disables expiration (treats it as "never expire") for values outside
-    # its documented 60-15552000 range, instead of rejecting the request.
-    imgbb_expiration_seconds: int = Field(default=600, ge=60, le=15552000)
+    cloudinary_api_key: str
+    cloudinary_api_secret: str
+    cloudinary_cloud_name: str
     ig_user_id: str
     ig_access_token: str
     graph_api_version: str = "v21.0"

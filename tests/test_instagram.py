@@ -1,10 +1,12 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
 from social_media_manager_agent.tools.instagram import (
     _create_media_container,
     _publish_media_container,
+    _raise_for_status_with_body,
     _wait_until_container_ready,
     publish_image_post,
 )
@@ -14,6 +16,16 @@ def _fake_response(json_data):
     response = MagicMock()
     response.json.return_value = json_data
     response.raise_for_status.return_value = None
+    return response
+
+
+def _fake_error_response(status_code, error_body):
+    response = MagicMock()
+    response.status_code = status_code
+    response.json.return_value = error_body
+    response.raise_for_status.side_effect = requests.exceptions.HTTPError(
+        f"{status_code} Client Error", response=response
+    )
     return response
 
 
@@ -49,6 +61,22 @@ def test_wait_until_container_ready_raises_on_error_status():
          patch("social_media_manager_agent.tools.instagram.time.sleep"):
         with pytest.raises(RuntimeError):
             _wait_until_container_ready("creation-123")
+
+
+def test_raise_for_status_with_body_includes_graph_api_error_detail():
+    error_body = {"error": {"message": "Invalid parameter", "type": "OAuthException", "code": 100}}
+    fake_response = _fake_error_response(400, error_body)
+
+    with pytest.raises(requests.exceptions.HTTPError) as exc_info:
+        _raise_for_status_with_body(fake_response)
+
+    assert "Invalid parameter" in str(exc_info.value)
+
+
+def test_raise_for_status_with_body_passes_through_on_success():
+    fake_response = _fake_response({"id": "creation-123"})
+
+    _raise_for_status_with_body(fake_response)  # should not raise
 
 
 def test_publish_image_post_orchestrates_full_flow():

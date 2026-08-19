@@ -33,3 +33,23 @@ def test_select_items_returns_selected_items_from_state():
         result = select_items(state)
 
     assert result == {"selected_items": fake_result.items}
+
+
+def test_select_items_dedupes_by_related_movie_title():
+    fake_result = SelectedItems(
+        items=[
+            SelectedItem(title="Idea 1", summary="...", reason="...", related_movie_title="Movie A"),
+            SelectedItem(title="Idea 2", summary="...", reason="...", related_movie_title="Movie A"),
+            SelectedItem(title="Idea 3", summary="...", reason="...", related_movie_title="Movie B"),
+        ]
+    )
+
+    with patch(
+        "social_media_manager_agent.nodes.selection.get_llm",
+        return_value=_FakeLLM(fake_result),
+    ):
+        state = {"candidate_items": [CandidateItem(title="Idea 1", summary="...")]}
+        result = select_items(state)
+
+    titles = [item.title for item in result["selected_items"]]
+    assert titles == ["Idea 1", "Idea 3"]

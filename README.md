@@ -28,7 +28,7 @@ flowchart TD
 
     RP -.->|writes approved + scheduled_at to output/posts/*.json| DISK[(output/posts/*.json)]
     DISK -.->|read by a separate, later run| PUB[publish-due command]
-    PUB -->|upload, temporary| IMGBB[(imgbb)]
+    PUB -->|upload| CLOUDINARY[(Cloudinary)]
     PUB -->|publish| IG[(Instagram Graph API)]
 ```
 
@@ -37,7 +37,7 @@ flowchart TD
 - **`refine_query`**: if all ideas are discarded, an LLM node rephrases the search direction and returns to discovery (maximum `MAX_DISCOVERY_ATTEMPTS` total attempts).
 - **`process_item`**: for each selected idea (run in parallel via `Send`), digs deeper with a focused search, writes the post draft, generates the image (consistent with the brand template in `data/brand_template.png`) and saves both to disk. It no longer decides a publish time.
 - **`review_posts`**: runs once per run, after all `process_item` branches join back together, so it sees the *whole batch* at once. For each post it decides `approved` (with a `rejection_reason` if not) and, if approved, a `scheduled_at` time — spacing the batch out sensibly instead of letting each post pick its own time independently. Decisions are written back into the same `output/posts/*.json` files.
-- **`publish-due` command** (separate CLI invocation, not part of the graph): scans `output/posts/*.json` for posts that are `approved`, not yet `published`, and whose `scheduled_at` has arrived. For each one it uploads the local image to imgbb, publishes via the Instagram Graph API, and marks the post `published` with its `instagram_media_id`. Deterministic, no LLM involved — meant to be re-run periodically (see [Scheduling](#scheduling) below), independently of and potentially much later than generation.
+- **`publish-due` command** (separate CLI invocation, not part of the graph): scans `output/posts/*.json` for posts that are `approved`, not yet `published`, and whose `scheduled_at` has arrived. For each one it uploads the local image to Cloudinary, verifies the resulting URL is publicly reachable, publishes via the Instagram Graph API, marks the post `published` with its `instagram_media_id`, and deletes the Cloudinary asset once Instagram has ingested it. Deterministic, no LLM involved — meant to be re-run periodically (see [Scheduling](#scheduling) below), independently of and potentially much later than generation.
 
 ## Setup
 
@@ -50,7 +50,7 @@ Fill in `.env` with:
 - `OPENAI_API_KEY` — used for all LLMs (text) and for image generation (gpt-image-2)
 - `TAVILY_API_KEY` — web search ([tavily.com](https://tavily.com))
 - `CINEMA_NAME`, `POST_LANGUAGE` — brand identity used in prompts
-- `IMGBB_API_KEY` — [api.imgbb.com](https://api.imgbb.com), used to get a temporary public URL for each image (Instagram's API requires a public URL, it can't take raw image bytes)
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` — from a free [Cloudinary](https://cloudinary.com) account, used to get a public URL for each image (Instagram's API requires a public URL, it can't take raw image bytes). We switched from imgbb after finding its URLs are unreliably fetchable by Instagram's Graph API crawler specifically (a widely-reported issue, unrelated to this project); each upload is now deleted from Cloudinary once it's no longer needed — see [Cloudinary notes](#cloudinary-notes) below.
 - `IG_USER_ID`, `IG_ACCESS_TOKEN` — from a Meta developer app with Instagram API access. **Important**: which Graph API host to use depends on how the token was issued — see [Instagram publishing notes](#instagram-publishing-notes) below, this trips people up.
 
 Also required:
@@ -72,10 +72,9 @@ Each generated batch is also reviewed automatically as part of the same run: eve
 uv run social-media-manager-agent publish-due
 ```
 
-Publishes whichever approved posts have reached their `scheduled_at`: uploads the image to imgbb with a
-short auto-expiration (so it self-deletes on imgbb's side shortly after, no manual cleanup call needed —
-see [notes](#imgbb-notes) below), then publishes via the Instagram Graph API. Safe to re-run any time —
-posts already marked `published` are skipped, so it won't double-post.
+Publishes whichever approved posts have reached their `scheduled_at`: uploads the image to Cloudinary,
+waits until the resulting URL is confirmed publicly reachable, then publishes via the Instagram Graph
+API. Safe to re-run any time — posts already marked `published` are skipped, so it won't double-post.
 
 ## Scheduling
 
@@ -122,8 +121,9 @@ All numeric/behavioral parameters are in `.env`, no hardcoded values in the code
 | `MOVIES_CSV_PATH` | Path to the upcoming movies CSV | `./data/movies.csv` |
 | `BRAND_TEMPLATE_PATH` | Path to the brand identity image | `./data/brand_template.png` |
 | `HISTORY_PATH` | Path to the post history | `./data/history.json` |
-| `IMGBB_API_KEY` | API key from [api.imgbb.com](https://api.imgbb.com) | — (required) |
-| `IMGBB_EXPIRATION_SECONDS` | How long an uploaded image stays on imgbb before auto-deleting. Must be **≥ 60** — imgbb silently disables expiration (image never deleted) for lower values instead of erroring, so this is enforced at startup | `600` |
+| `CLOUDINARY_CLOUD_NAME` | Cloud name from your [Cloudinary](https://cloudinary.com) account | — (required) |
+| `CLOUDINARY_API_KEY` | API key from your Cloudinary account | — (required) |
+| `CLOUDINARY_API_SECRET` | API secret from your Cloudinary account, used to sign upload requests | — (required) |
 | `IG_USER_ID` | Instagram professional account ID to publish to | — (required) |
 | `IG_ACCESS_TOKEN` | Access token for that account | — (required) |
 | `GRAPH_API_VERSION` | Meta Graph API version to call | `v21.0` |
@@ -143,19 +143,32 @@ using the wrong one fails with a confusing `"Invalid OAuth access token - Cannot
 If your `IG_ACCESS_TOKEN` starts with `EAA`, change `GRAPH_API_BASE` in `tools/instagram.py` to
 `https://graph.facebook.com`.
 
-## imgbb notes
+## Cloudinary notes
 
 Instagram's Graph API needs a **public URL** for the image, not raw bytes, so the publish step uploads
-to imgbb just long enough for Instagram's servers to fetch it, then lets it expire on its own via the
-`expiration` upload parameter (`IMGBB_EXPIRATION_SECONDS`). Two things worth knowing if you touch this:
+to Cloudinary first ([tools/cloudinary.py](src/social_media_manager_agent/tools/cloudinary.py), signed
+upload via `CLOUDINARY_API_KEY`/`CLOUDINARY_API_SECRET`), then waits until the resulting `secure_url` is
+confirmed publicly fetchable (`wait_until_publicly_reachable`, a plain `GET` checked for status 200 and
+an `image/*` content type, retried a few times with a short backoff) before handing it to Instagram.
 
-- The `delete_url` returned by imgbb's upload API does **not** work as a programmatic delete endpoint —
-  it's a link to imgbb's web page for the image (a plain `GET` just loads the page, nothing gets
-  deleted). `expiration` is the only reliable way to auto-clean an upload without a logged-in browser
-  session.
-- Deletion via `expiration` is not instant — there's a short lag after the timer expires before imgbb
-  actually purges the file (observed to be roughly a couple of minutes in testing). The default of 600s
-  gives comfortable headroom over both that lag and the time Instagram needs to fetch the image.
+We moved off imgbb because its URLs were intermittently unreachable specifically for Instagram's Graph
+API crawler (`error_subcode 2207052` / `"Only photo or video can be accepted as media type"`), even
+though the same URLs were reliably fetchable from our own machine and worked fine on other platforms —
+a known, widely-reported incompatibility between imgbb and Instagram's fetcher, not something fixable by
+waiting longer.
+
+Each uploaded image **is deleted from Cloudinary** once it's no longer needed: right after a successful
+Instagram publish (Instagram has already fully fetched and processed the image by the time
+`publish_image_post` returns, so the Cloudinary copy isn't needed anymore), or as a best-effort cleanup
+if the upload succeeded but a later step (reachability check or Instagram publish) failed, to avoid
+leaving an orphaned asset behind. The `public_id` returned by the upload is persisted on the post's JSON
+record (`cloudinary_public_id`) as soon as the upload succeeds, and cleared once the delete succeeds —
+so if the delete itself fails after its retries are exhausted (Cloudinary outage, rotated secret, etc.),
+the field stays populated as a durable marker: any `output/posts/*.json` with a non-null
+`cloudinary_public_id` still has an asset on Cloudinary worth cleaning up manually. Images uploaded
+before this change was introduced have no such marker and can't be reconciled automatically. A delete
+failure never affects publishing itself — a post that published successfully stays `published` even if
+its Cloudinary cleanup didn't go through.
 
 ## Tests
 
@@ -163,8 +176,8 @@ to imgbb just long enough for Instagram's servers to fetch it, then lets it expi
 uv run pytest tests/ -v
 ```
 
-All tests are deterministic and make no real network calls (LLM, search, imgbb, and Instagram Graph API
-calls are all mocked where needed, or tested as pure I/O on temporary files).
+All tests are deterministic and make no real network calls (LLM, search, Cloudinary, and Instagram Graph
+API calls are all mocked where needed, or tested as pure I/O on temporary files).
 
 ## Known limitations
 

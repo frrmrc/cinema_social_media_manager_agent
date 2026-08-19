@@ -11,6 +11,18 @@ logger = logging.getLogger(__name__)
 GRAPH_API_BASE = "https://graph.instagram.com"
 
 
+def _raise_for_status_with_body(response: requests.Response) -> None:
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as exc:
+        try:
+            detail = response.json()
+        except ValueError:
+            detail = response.text
+        logger.warning("Instagram Graph API error %s: %s", response.status_code, detail)
+        raise requests.exceptions.HTTPError(f"{exc} — {detail}", response=response) from exc
+
+
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def _create_media_container(image_url: str, caption: str) -> str:
     settings = get_settings()
@@ -24,7 +36,7 @@ def _create_media_container(image_url: str, caption: str) -> str:
         },
         timeout=30,
     )
-    response.raise_for_status()
+    _raise_for_status_with_body(response)
     return response.json()["id"]
 
 
@@ -37,7 +49,7 @@ def _wait_until_container_ready(creation_id: str, max_attempts: int = 5, wait_se
             params={"fields": "status_code", "access_token": settings.ig_access_token},
             timeout=30,
         )
-        response.raise_for_status()
+        _raise_for_status_with_body(response)
         status = response.json().get("status_code")
         if status == "FINISHED":
             return
@@ -60,7 +72,7 @@ def _publish_media_container(creation_id: str) -> str:
         },
         timeout=30,
     )
-    response.raise_for_status()
+    _raise_for_status_with_body(response)
     return response.json()["id"]
 
 

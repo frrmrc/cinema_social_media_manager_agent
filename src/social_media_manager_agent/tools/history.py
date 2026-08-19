@@ -42,6 +42,16 @@ def append_to_history(items: list[SelectedItem], history_path: Path | None = Non
     )
 
 
+def titles_posted_today(history_path: Path | None = None) -> set[str]:
+    path = history_path or get_settings().history_path
+    today_str = date.today().isoformat()
+    return {
+        e.related_movie_title
+        for e in _load_all(path)
+        if e.created_at == today_str and e.related_movie_title
+    }
+
+
 def format_history(entries: list[HistoryEntry]) -> str:
     if not entries:
         return "(none)"
