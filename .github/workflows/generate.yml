@@ -10,6 +10,9 @@ concurrency:
   group: agent-state
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -62,6 +65,17 @@ jobs:
           POST_LANGUAGE: ${{ vars.POST_LANGUAGE }}
           MAX_POSTS_PER_RUN: ${{ vars.MAX_POSTS_PER_RUN }}
           MODEL_WRITE_POST: ${{ vars.MODEL_WRITE_POST }}
+
+      - name: Persist movie post counts
+        if: always()
+        run: |
+          if ! git diff --quiet -- data/movies.csv; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data/movies.csv
+            git commit -m "chore: update movie post counts"
+            git push
+          fi
 
       - name: Save generated state
         if: always()
