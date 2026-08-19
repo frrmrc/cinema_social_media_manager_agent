@@ -8,6 +8,7 @@ SELECTION_PROMPT = """Below is a list of news ideas about the movie world.
 Select at most {max_items} of the most relevant ideas for promoting a cinema on social media,
 briefly explaining the reasoning for each. The goal is to keep our customers engaged with the cinema world and promote our theaters: select consistently with this.
 
+Do NOT select news and information regarding offers, discounts, prices, ticket sales, promotions, or other purely commercial matters. Prefer editorially relevant cinema news over transactional content.
 DO NOT select ideas that cover the same topic (even with different wording) as any of these,
 already published in the last {history_days} days. NEVER select ideas that cover these topics:
 {history}
