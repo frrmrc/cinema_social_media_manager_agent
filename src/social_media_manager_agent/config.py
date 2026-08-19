@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     history_path: Path = Path("data/history.json")
     max_discovery_attempts: int = 2
     max_posts_per_run: int = 3
-    movie_window_days_before: int = 7  # how many days after release a movie is still considered "eligible"
+    movie_window_days_before: int = 4  # how many days after release a movie is still considered "eligible"
     movie_window_days_after: int = 4  # how many days before release a movie starts being considered
     max_posts_per_movie: int = 5  # max approved posts ever generated for a single movie
     broad_search_results: int = 10

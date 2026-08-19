@@ -73,7 +73,7 @@ GENERIC_NEWS_MODE_NOTE = (
 def _movie_release_mode_note(cinema_name: str, movie_title: str, release_date: str | None) -> str:
     date_clause = f", starting {release_date}" if release_date else ""
     must_mention = (
-        f'clearly mention the movie title "{movie_title}" and that it\'s coming to {cinema_name}{date_clause}'
+        f'clearly mention the movie title "{movie_title}" and that it\'s coming to / it\'s available at {cinema_name}{date_clause} based on today\'s date {date.today().isoformat()}'
         if release_date
         else f'clearly mention the movie title "{movie_title}"'
     )
