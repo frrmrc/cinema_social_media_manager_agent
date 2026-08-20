@@ -68,3 +68,8 @@ class HistoryEntry(BaseModel):
     summary: str = Field(description="Brief summary of the topic")
     related_movie_title: str | None = None
     created_at: str = Field(description="Generation date (YYYY-MM-DD)")
+
+
+class SeenUrl(BaseModel):
+    url: str = Field(description="URL of a search result already surfaced in a past discovery run")
+    seen_at: str = Field(description="Date the URL was first seen (YYYY-MM-DD)")

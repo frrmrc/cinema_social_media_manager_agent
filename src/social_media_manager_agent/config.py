@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     movie_search_results: int = 6
     focused_search_results: int = 4
     history_window_days: int = 15
+    broad_search_time_range: str = "week"
+    movie_search_time_range: str = "month"
+    seen_urls_path: Path = Path("data/seen_urls.json")
+    seen_urls_window_days: int = 45
 
     brand_template_path: Path = Path("data/brand_template.png")
     images_folder: Path = Path("output/images")

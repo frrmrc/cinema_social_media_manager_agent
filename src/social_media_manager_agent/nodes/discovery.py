@@ -4,6 +4,7 @@ from social_media_manager_agent.state import GraphState
 from social_media_manager_agent.tools.movies_csv import filter_eligible_movies, load_upcoming_movies
 from social_media_manager_agent.tools.search import broad_search, format_results
 from social_media_manager_agent.tools.history import format_history, load_recent_history, titles_posted_today
+from social_media_manager_agent.tools.seen_urls import load_recent_seen_urls, record_seen_urls
 from social_media_manager_agent.config import get_settings
 
 
@@ -59,9 +60,12 @@ def discover_generic_news(state: GraphState) -> dict:
     query = GENERIC_NEWS_QUERY if not hint else f"{GENERIC_NEWS_QUERY}. {hint}"
 
     settings = get_settings()
-    results = broad_search(query, max_results=settings.broad_search_results)
+    seen = load_recent_seen_urls(settings.seen_urls_window_days)
+    results = broad_search(query, max_results=settings.broad_search_results, time_range=settings.broad_search_time_range)
+    record_seen_urls([r["url"] for r in results if r.get("url")])
+    fresh_results = [r for r in results if r.get("url") not in seen]
 
-    prompt = EXTRACTION_PROMPT.format(cinema_name=settings.cinema_name, search_results=format_results(results))
+    prompt = EXTRACTION_PROMPT.format(cinema_name=settings.cinema_name, search_results=format_results(fresh_results))
     if hint:
         prompt += f"\n\nAvoid ideas related to: {hint}"
 
@@ -93,14 +97,21 @@ def discover_movie_releases(state: GraphState) -> dict:
     llm = get_llm("discover_movie_releases")
     all_candidates: list[CandidateItem] = []
 
+    seen = load_recent_seen_urls(settings.seen_urls_window_days)
+    newly_seen: list[str] = []
+
     for movie in movies:
         query = MOVIE_NEWS_QUERY_TEMPLATE.format(title=movie.title, release_date=movie.release_date)
         if hint:
             query = f"{query}. {hint}"
-        results = broad_search(query, max_results=settings.movie_search_results)
+        results = broad_search(query, max_results=settings.movie_search_results, time_range=settings.movie_search_time_range)
+        fresh_results = [r for r in results if r.get("url") not in seen]
+        new_urls = [r["url"] for r in results if r.get("url")]
+        newly_seen.extend(new_urls)
+        seen.update(new_urls)
 
         prompt = MOVIE_EXTRACTION_PROMPT.format(
-            title=movie.title, release_date=movie.release_date, search_results=format_results(results)
+            title=movie.title, release_date=movie.release_date, search_results=format_results(fresh_results)
         )
         if hint:
             prompt += f"\n\nAvoid ideas related to: {hint}"
@@ -109,6 +120,8 @@ def discover_movie_releases(state: GraphState) -> dict:
         for item in extraction.items:
             item.related_movie_title = movie.title
         all_candidates.extend(extraction.items)
+
+    record_seen_urls(newly_seen)
 
     return {
         "candidate_items": all_candidates,
