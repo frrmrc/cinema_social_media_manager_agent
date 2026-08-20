@@ -1,6 +1,7 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from social_media_manager_agent.config import get_settings
 from social_media_manager_agent.schemas import Post
@@ -25,11 +26,12 @@ def _load_posts(posts_folder: Path) -> list[Post]:
     return posts
 
 
-def _is_due(post: Post, now: datetime) -> bool:
+def _is_due(post: Post, now: datetime, local_tz: ZoneInfo) -> bool:
     if not post.approved or post.published or not post.scheduled_at:
         return False
     try:
-        scheduled = datetime.fromisoformat(post.scheduled_at)
+        # scheduled_at is a naive local-time string (the reviewer's timezone), not UTC
+        scheduled = datetime.fromisoformat(post.scheduled_at).replace(tzinfo=local_tz)
     except ValueError:
         logger.warning("Invalid scheduled_at for '%s': %s", post.title, post.scheduled_at)
         return False
@@ -46,14 +48,16 @@ def _cleanup_cloudinary_asset(post: Post, public_id: str, folder: Path) -> None:
 
 
 def publish_due_posts(posts_folder: Path | None = None) -> tuple[list[str], list[str]]:
-    folder = posts_folder or get_settings().save_folder
-    now = datetime.now()
+    settings = get_settings()
+    folder = posts_folder or settings.save_folder
+    now = datetime.now(timezone.utc)
+    local_tz = ZoneInfo(settings.timezone)
 
     published: list[str] = []
     skipped: list[str] = []
 
     for post in _load_posts(folder):
-        if not _is_due(post, now):
+        if not _is_due(post, now, local_tz):
             skipped.append(post.title)
             continue
 

@@ -1,10 +1,18 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
+from zoneinfo import ZoneInfo
 
 from social_media_manager_agent.schemas import Post
 from social_media_manager_agent.tools.cloudinary import CloudinaryUpload
 from social_media_manager_agent.tools.publisher import publish_due_posts
 from social_media_manager_agent.tools.storage import save_image, save_post
+
+LOCAL_TZ = ZoneInfo("Europe/Rome")
+
+
+def _local_now():
+    """Naive local time, as the reviewer would write into scheduled_at."""
+    return datetime.now(timezone.utc).astimezone(LOCAL_TZ).replace(tzinfo=None)
 
 
 def _make_post(tmp_path, **overrides):
@@ -18,7 +26,7 @@ def test_publish_due_posts_publishes_only_due_approved_posts(tmp_path):
         tmp_path,
         title="Due Post",
         approved=True,
-        scheduled_at=(datetime.now() - timedelta(minutes=5)).isoformat(),
+        scheduled_at=(_local_now() - timedelta(minutes=5)).isoformat(),
     )
     image_path = save_image(b"fake-bytes", due_post, save_folder=tmp_path)
     due_post.image_path = str(image_path)
@@ -28,7 +36,7 @@ def test_publish_due_posts_publishes_only_due_approved_posts(tmp_path):
         tmp_path,
         title="Not Due Post",
         approved=True,
-        scheduled_at=(datetime.now() + timedelta(hours=1)).isoformat(),
+        scheduled_at=(_local_now() + timedelta(hours=1)).isoformat(),
     )
     save_post(not_due_post, save_folder=tmp_path)
 
@@ -39,7 +47,7 @@ def test_publish_due_posts_publishes_only_due_approved_posts(tmp_path):
         tmp_path,
         title="Already Published Post",
         approved=True,
-        scheduled_at=(datetime.now() - timedelta(minutes=5)).isoformat(),
+        scheduled_at=(_local_now() - timedelta(minutes=5)).isoformat(),
         published=True,
     )
     save_post(already_published_post, save_folder=tmp_path)
@@ -74,7 +82,7 @@ def test_publish_due_posts_leaves_post_unpublished_if_graph_api_fails(tmp_path):
         tmp_path,
         title="Failing Post",
         approved=True,
-        scheduled_at=(datetime.now() - timedelta(minutes=5)).isoformat(),
+        scheduled_at=(_local_now() - timedelta(minutes=5)).isoformat(),
     )
     image_path = save_image(b"fake-bytes", due_post, save_folder=tmp_path)
     due_post.image_path = str(image_path)
@@ -107,7 +115,7 @@ def test_publish_due_posts_skips_post_when_verification_fails(tmp_path):
         tmp_path,
         title="Unreachable Post",
         approved=True,
-        scheduled_at=(datetime.now() - timedelta(minutes=5)).isoformat(),
+        scheduled_at=(_local_now() - timedelta(minutes=5)).isoformat(),
     )
     image_path = save_image(b"fake-bytes", due_post, save_folder=tmp_path)
     due_post.image_path = str(image_path)
@@ -141,7 +149,7 @@ def test_publish_due_posts_publish_succeeds_even_if_cloudinary_delete_fails(tmp_
         tmp_path,
         title="Delete Failing Post",
         approved=True,
-        scheduled_at=(datetime.now() - timedelta(minutes=5)).isoformat(),
+        scheduled_at=(_local_now() - timedelta(minutes=5)).isoformat(),
     )
     image_path = save_image(b"fake-bytes", due_post, save_folder=tmp_path)
     due_post.image_path = str(image_path)
@@ -174,7 +182,7 @@ def test_publish_due_posts_skips_post_without_image(tmp_path):
         tmp_path,
         title="No Image Post",
         approved=True,
-        scheduled_at=(datetime.now() - timedelta(minutes=5)).isoformat(),
+        scheduled_at=(_local_now() - timedelta(minutes=5)).isoformat(),
     )
     save_post(due_post, save_folder=tmp_path)
 

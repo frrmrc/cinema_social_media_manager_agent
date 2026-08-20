@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     cinema_name: str
     post_language: str
+    timezone: str = "Europe/Rome"  # local timezone the reviewer's scheduled_at times are expressed in
 
     default_model: str = "gpt-4o-mini"
     save_folder: Path = Path("output/posts")
