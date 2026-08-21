@@ -25,6 +25,7 @@ jobs:
         with:
           path: |
             data/history.json
+            data/seen_urls.json
             output/
           key: agent-state-${{ github.run_id }}
           restore-keys: |
@@ -51,6 +52,7 @@ jobs:
         with:
           path: |
             data/history.json
+            data/seen_urls.json
             output/
           key: agent-state-${{ github.run_id }}
 
